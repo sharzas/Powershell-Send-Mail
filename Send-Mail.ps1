@@ -1395,15 +1395,28 @@ Source.Exception.Thrown : {5}
 
 
 if ($PSBoundParameters.Count -gt 0) {
-    # at least one parameter specified - call Send-Mail interactively
-    Write-Verbose ('Send-Mail.ps1: Parameters specified - will call Send-Mail function use below parameters:')
+    # at least one parameter specified - call Send-Mail interactively    
+    Write-Verbose ('Send-Mail.ps1: Parameters specified - adding all non-commong ones to Parameter variable.')
+
+    $Params = @{}
 
     foreach ($key in $PSBoundParameters.Keys) {
         Write-Verbose ('Send-Mail.ps1: [{0}]"{1}" = {2}' -f $PSBoundParameters[$key].Gettype().FullName, $key, $PSBoundParameters[$key])
+        $Params[$key] = $PSBoundParameters[$Key]
     }
 
+    @("Verbose","Debug","ErrorAction", "ErrorVariable", "WarningAction", "WarningVariable","OutBuffer", "PipelineVariable", "OutVariable")|Foreach-Object {
+        if ($Params.ContainsKey($_)) {
+            $Params.Remove($_)
+        }
+    }
+}
+
+
+if ($Params.Count -gt 0) {
+    Write-Verbose ('Send-Mail.ps1: Parameters specified - will call Send-Mail function use below parameters:')
     try {
-        Send-Mail @PSBoundParameters
+        Send-Mail @Params
 
         Write-Host ('Send-Mail.ps1: Mail succesfully sent.')
     } catch {
@@ -1416,7 +1429,7 @@ if ($PSBoundParameters.Count -gt 0) {
     }
 } else {
     # no parameters specified - do nothing (assume dot sourced / loaded as module)
-    Write-Verbose "No parameters specified. Nothing will happen."
+    Write-Verbose "No non-common parameters specified. Nothing will happen."
     Write-Verbose ""
     Write-Verbose "You may dot source the functions in this script by running it without parameters. If that"
     Write-Verbose "was what you intended, please remember to run the script like this:"
