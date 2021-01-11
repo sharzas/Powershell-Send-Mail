@@ -1,4 +1,152 @@
-[CmdletBinding()]
+    <#
+    .SYNOPSIS
+        Send email message.
+
+    .DESCRIPTION
+        Send email message. 
+        
+        Support for:
+        - Attachments
+        - HTML body
+        - Authentication
+        - SSL
+        
+    .PARAMETER SMTPHost
+        SMTP server to use for sending the mail.
+
+    .PARAMETER SMTPPort
+        SMTP server TCP Port.
+
+    .PARAMETER From
+        From mail address.
+        
+        Use hashtable form to supply a display name.
+
+        This parameter must be one of the following:
+        
+        [string]    "mailaddress@domain.com"
+        [hashtable] @{"mailaddress@domain.com" = "Displayname"}
+
+        If you use a hashtable, it must have exactly 1 item.
+        
+    .PARAMETER Recipient
+        Recipient(s) mail address(es).
+        
+        This parameter can be either a single item, or an array.
+
+        Each item in the array must be one of the following.
+        
+        [string]    "mailaddress@domain.com"
+        [hashtable] @{"mailaddress@domain.com" = "Displayname"}
+        [hashtable] @{
+                        "mailaddress1@domain.com" = "Displayname"
+                        "mailaddress2@otherdomain.com" = "Displayname"
+                    }
+
+        NOTE: for recipient address, hashtables can contain multiple entries.
+
+    .PARAMETER Subject
+        Subject of the mail
+
+    .PARAMETER Body
+        Body of the mail in text/plain format. Use this parameter if you have formatted
+        your mail as text only.
+                
+    .PARAMETER BodyHTML
+        Body of the mail in text/html format. Use this parameter if you have formatted
+        your mail as HTML.        
+
+    .PARAMETER AttachmentFile
+        One or more files to attach to the mail. This can be either a single string, or
+        an array of strings.
+
+    .PARAMETER AttachmentText
+        One or more attachments to construct from text. Will be attached as text files.
+
+        This can an array or a single item. Each item must be one of the following:
+
+        [string]    "attachment text"
+        [hashtable] @{"filename" = "attachment text"}
+
+        In case of a [string] value, a filename will be constructed using increasing numbers:
+
+        "Attachment_1.txt"
+        "Attachment_2.txt"
+        ...
+
+    .PARAMETER Username
+        Username to use for SMTP server authentication. 
+        
+        If unspecified, no authentication will be attempted.
+
+    .PARAMETER Password
+        Password to use for SMTP server authentication. Can be supplied as [string] or [securestring]
+        
+    .PARAMETER EnableSSL
+        Use SSL when communicating with the SMTP host.
+
+    .EXAMPLE
+        Send-Mail -SMTPHost mysmtp.mydomain.com -SMTPPort 25 -From bofh@mydomain.com -Recipient "pooruser@mydomain.com" -Subject "Reboot notification" -Body "The system was rebooted 5 minutes ago fyi"
+
+        Sends normal text mail to pooruser@mydomain.com, using the SMTP mail server at mysmtp.mydomain.com:25.
+        Mail addresses are specified using simple strings (no display name included)
+
+    .EXAMPLE
+        One of below:
+        Send-Mail -SMTPHost mysmtp.mydomain.com -SMTPPort 25 -From @{"bofh@mydomain.com" = "Bastard Operator From Hell"} -Recipient @{"pooruser@mydomain.com" = "Poor user 1"},@{"pooruser2@mydomain.com" = "Poor user 2"} -Subject "Reboot notification" -Body "The system was rebooted 5 minutes ago fyi"
+
+        Send-Mail -SMTPHost mysmtp.mydomain.com -SMTPPort 25 -From @{"bofh@mydomain.com" = "Bastard Operator From Hell"} -Recipient @{"pooruser@mydomain.com" = "Poor user 1"; "pooruser2@mydomain.com" = "Poor user 2"} -Subject "Reboot notification" -Body "The system was rebooted 5 minutes ago fyi"
+
+        Both of the above commands sends normal text mail to pooruser@mydomain.com and pooruser2@mydomain.com, using the SMTP 
+        mail server at mysmtp.mydomain.com:25. Mail addresses are specified using hashtables (display name included).
+
+    .EXAMPLE
+        $HTML = "<html><body><p>This is a HTML formatted mail - btw the system was rebooted 5 mins ago fyi</p></body></html>"
+
+        Send-Mail -SMTPHost mysmtp.mydomain.com -SMTPPort 25 -From bofh@mydomain.com -Recipient "pooruser@mydomain.com" -Subject "Reboot notification" -BodyHTML $HTML
+
+        Sends HTML formatted mail to pooruser@mydomain.com, using the SMTP mail server at mysmtp.mydomain.com:25. 
+        Mail addresses are specified using simple strings (no display name included)
+
+    .EXAMPLE
+        $HTML = "<html><body><p>This is a HTML formatted mail - btw the system was rebooted 5 mins ago fyi</p></body></html>"
+
+        Send-Mail -SMTPHost mysmtp.mydomain.com -SMTPPort 25 -From bofh@mydomain.com -Recipient "pooruser@mydomain.com" -Subject "Reboot notification" -BodyHTML $HTML -AttachmentFile "file1.zip","file2.zip"
+
+        Sends HTML formatted mail to pooruser@mydomain.com, using the SMTP mail server at mysmtp.mydomain.com:25. 
+        
+        Following files are attached to the mail:
+
+        file1.zip
+        file2.zip
+
+    .EXAMPLE
+        $HTML = "<html><body><p>This is a HTML formatted mail - btw the system was rebooted 5 mins ago fyi</p></body></html>"
+
+        Send-Mail -SMTPHost mysmtp.mydomain.com -SMTPPort 25 -From bofh@mydomain.com -Recipient "pooruser@mydomain.com" -Subject "Reboot notification" -BodyHTML $HTML -AttachmentText "This is a textfile attachment",@{"file.txt" = "This is another text attachment"}
+
+        Sends HTML formatted mail to pooruser@mydomain.com, using the SMTP mail server at mysmtp.mydomain.com:25. 
+        
+        Following files are attached to the mail:
+        
+        Attachment_1.txt
+        file.txt
+
+        Above is produced from the text in the parameters.
+
+    .OUTPUTS
+        Nothing but a status.
+
+
+    .NOTES
+        Author.: Kenneth Nielsen (sharzas @ GitHub.com)
+        Version: 1.0
+
+    .LINK
+        https://github.com/sharzas/Powershell-Send-Mail
+    #>
+    
+    [CmdletBinding()]
 
 Param (
     [Parameter()]
@@ -132,7 +280,6 @@ function Resolve-Error
         $Exception|Select-Object -Property *,@{n="HResult"; e={"0x{0:x}" -f $_.HResult}} -ExcludeProperty HResult|Format-List * -Force|Out-String -Stream -Width $Width
     }
 } # function Resolve-Error
-
 
 
 
@@ -287,7 +434,7 @@ function Send-Mail
         Version: 1.0
 
     .LINK
-        https://github.com/sharzas/Powershell-Get-StorCLIStatus
+        https://github.com/sharzas/Powershell-Send-Mail
     #>
     [CmdletBinding()]
 
@@ -580,10 +727,10 @@ function Send-Mail
     
         .NOTES
             Author.: Kenneth Nielsen (sharzas @ GitHub.com)
-            Version: 1.1
+            Version: 1.2
     
         .LINK
-            https://github.com/sharzas/Powershell-Get-StorCLIStatus
+            https://github.com/sharzas/Powershell-New-ErrorRecord
         #>
     
         [CmdletBinding()]
