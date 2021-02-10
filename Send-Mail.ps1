@@ -1237,7 +1237,7 @@ Source.Exception.Thrown : {5}
 
     } elseif ($From -is [string]) {
         # string - use as is.
-        Write-Verbose ('Send-Mail(): [Message] [Sender]      [Text]      Adding from: {0} <{1}>' -f $From, $From)
+        Write-Verbose ('Send-Mail(): [Message] [Sender]    [Text]      Adding from: {0} <{1}>' -f $From, $From)
 
         try {    
             # set .From / .Sender property 
