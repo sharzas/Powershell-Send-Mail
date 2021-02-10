@@ -1396,7 +1396,7 @@ Source.Exception.Thrown : {5}
 
 if ($PSBoundParameters.Count -gt 0) {
     # at least one parameter specified - call Send-Mail interactively    
-    Write-Verbose ('Send-Mail.ps1: Parameters specified - adding all non-commong ones to Parameter variable.')
+    Write-Verbose ('Send-Mail.ps1: Parameters specified - adding all non-common ones to Parameter variable.')
 
     $Params = @{}
 
@@ -1414,7 +1414,7 @@ if ($PSBoundParameters.Count -gt 0) {
 
 
 if ($Params.Count -gt 0) {
-    Write-Verbose ('Send-Mail.ps1: Parameters specified - will call Send-Mail function use below parameters:')
+    Write-Verbose ('Send-Mail.ps1: Parameters specified - will call Send-Mail function using below parameters:')
     try {
         Send-Mail @Params
 
